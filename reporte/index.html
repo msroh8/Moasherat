@@ -549,15 +549,26 @@ function selElW(w){elWidth=w;document.getElementById('elw-half').classList.toggl
 function previewElImg(inp){if(!inp.files[0])return;var r=new FileReader();r.onload=function(e){elImgSrc=e.target.result;document.getElementById('el-img-prev-img').src=elImgSrc;document.getElementById('el-img-prev').style.display='block';};r.readAsDataURL(inp.files[0]);}
 function confirmAddEl(){
   if(!PB[1])PB[1]=[];
+  pushUndo();
   if(elType==='text'){PB[1].push({id:Date.now(),title:document.getElementById('new-el-title').value.trim()||'قسم جديد',content:document.getElementById('new-el-content').value,cols:elWidth==='full'?2:1,type:'text'});}
   else if(elType==='img'&&elImgSrc){PB[1].push({id:Date.now(),title:'صورة',content:'',cols:1,type:'img',imgSrc:elImgSrc});}
   closeModal('modal-add-el');lu();
 }
 
+var undoStack=[];
+function pushUndo(){undoStack.push(JSON.stringify(PB));if(undoStack.length>20)undoStack.shift();}
+function undo(){if(!undoStack.length){toast('لا يوجد تراجع');return;}PB=JSON.parse(undoStack.pop());renderPrev();}
+function delBlock(pnum,idx){
+  pushUndo();
+  var pb=PB[pnum];if(!pb)return;
+  pb.splice(idx,1);
+  renderPrev();
+}
+
 function renderPrev(){
   var area=document.getElementById('preview-area');area.innerHTML='';
   var tb=document.createElement('div');tb.className='pg-toolbar';
-  tb.innerHTML='<div class="pg-tb-inner"><button class="pt-btn'+(moveMode?' active':'')+'" onclick="toggleMove()">'+(moveMode?'✅':'✋')+' تحريك العناصر</button><button class="pt-add" onclick="openAddEl()">➕ إضافة عنصر</button></div>';
+  tb.innerHTML='<div class="pg-tb-inner"><button class="pt-btn'+(moveMode?' active':'')+'" onclick="toggleMove()">'+(moveMode?'✅':'✋')+' تحريك</button><button class="pt-add" onclick="openAddEl()">➕ إضافة</button><button class="pt-btn" onclick="undo()" title="تراجع">↩ تراجع</button></div>';
   area.appendChild(tb);
   for(var p=1;p<=1+extraPages;p++)area.appendChild(buildPage(p));
 }
@@ -608,8 +619,33 @@ function mkRow(blocks,pnum,si,fs){
   blocks.forEach(function(b,ri){
     var el=document.createElement('div');el.className='c-block';el.dataset.idx=si+ri;el.dataset.pnum=pnum;
     if(moveMode)el.setAttribute('draggable','true');
-    if(b.type==='img'){var img=document.createElement('img');img.className='block-img';img.src=b.imgSrc||'';img.style.height='160px';el.appendChild(img);}
-    else{var bv=(b.rptId?fv('f_'+b.rptId):(b.content||'')).replace(/\n/g,'<br>');el.innerHTML='<div class="cb-head">◆ '+(b.title||'')+'</div><div class="cb-body" contenteditable="true" spellcheck="false" style="font-size:'+fs+'">'+bv+'</div>';}
+    if(b.type==='img'){
+      var img=document.createElement('img');img.className='block-img';img.src=b.imgSrc||'';img.style.height='160px';el.appendChild(img);
+      var imgCtrl=document.createElement('div');imgCtrl.style.cssText='position:absolute;top:4px;left:4px;display:flex;gap:3px';
+      var delI=document.createElement('button');delI.textContent='🗑';delI.title='حذف';delI.style.cssText='background:rgba(200,40,40,.85);color:white;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px';
+      delI.onclick=function(e){e.stopPropagation();pushUndo();PB[pnum].splice(si+ri,1);renderPrev();};
+      imgCtrl.appendChild(delI);el.appendChild(imgCtrl);
+    } else {
+      var bv=(b.rptId?fv('f_'+b.rptId):(b.content||'')).replace(/\n/g,'<br>');
+      var head=document.createElement('div');head.className='cb-head';
+      var titleSpan=document.createElement('span');titleSpan.textContent='◆ '+(b.title||'');titleSpan.style.cssText='flex:1;cursor:text';
+      titleSpan.ondblclick=function(){
+        var cur=titleSpan.textContent.replace('◆ ','');
+        var newName=prompt('اسم القسم:',cur);
+        if(newName&&newName.trim()){
+          pushUndo();
+          PB[pnum][si+ri].title=newName.trim();
+          renderPrev();
+        }
+      };
+      var delBtn=document.createElement('button');delBtn.textContent='×';delBtn.title='حذف القسم';
+      delBtn.style.cssText='background:rgba(255,255,255,.2);color:white;border:none;border-radius:3px;padding:0 5px;cursor:pointer;font-size:14px;font-weight:700;margin-right:4px;line-height:1.4';
+      delBtn.onclick=function(e){e.stopPropagation();delBlock(pnum,si+ri);};
+      head.style.display='flex';head.style.alignItems='center';
+      head.appendChild(titleSpan);head.appendChild(delBtn);
+      var body=document.createElement('div');body.className='cb-body';body.contentEditable='true';body.spellcheck=false;body.style.fontSize=fs;body.innerHTML=bv;
+      el.appendChild(head);el.appendChild(body);
+    }
     var rh=document.createElement('div');rh.className='resize-h';
     var sy=0,sh=0,rs=false;
     rh.onmousedown=function(e){rs=true;sy=e.clientY;sh=el.offsetHeight;e.preventDefault();e.stopPropagation();};
