@@ -155,6 +155,7 @@ body{font-family:"Tajawal",sans-serif;background:#eef1f5;color:#1a2a35;min-heigh
 .ov-close{padding:7px 20px;background:var(--dark);color:white;border:none;border-radius:7px;font-family:"Tajawal",sans-serif;font-size:12px;font-weight:700;cursor:pointer}
 .toast{position:fixed;bottom:22px;right:22px;background:var(--dark);color:white;padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:3000;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
+@media print{.no-print,.pt-btn,.pt-add,.pg-toolbar{display:none!important}}
 @media(max-width:900px){#screen-editor.active{flex-direction:column-reverse;height:auto}.sidebar{width:100%}.a4-page{width:100%}}
 </style>
 </head>
@@ -625,7 +626,7 @@ function mkRow(blocks,pnum,si,fs){
     if(b.type==='img'){
       var img=document.createElement('img');img.className='block-img';img.src=b.imgSrc||'';img.style.height='160px';el.appendChild(img);
       var imgCtrl=document.createElement('div');imgCtrl.style.cssText='position:absolute;top:4px;left:4px;display:flex;gap:3px';
-      var delI=document.createElement('button');delI.textContent='🗑';delI.title='حذف';delI.style.cssText='background:rgba(200,40,40,.85);color:white;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px';
+      var delI=document.createElement('button');delI.textContent='🗑';delI.title='حذف';delI.className='no-print';delI.style.cssText='background:rgba(200,40,40,.85);color:white;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px';
       delI.onclick=function(e){e.stopPropagation();pushUndo();PB[pnum].splice(si+ri,1);renderPrev();};
       imgCtrl.appendChild(delI);el.appendChild(imgCtrl);
     } else {
@@ -642,7 +643,7 @@ function mkRow(blocks,pnum,si,fs){
         }
       };
       var delBtn=document.createElement('button');delBtn.textContent='×';delBtn.title='حذف القسم';
-      delBtn.style.cssText='background:rgba(255,255,255,.2);color:white;border:none;border-radius:3px;padding:0 5px;cursor:pointer;font-size:14px;font-weight:700;margin-right:4px;line-height:1.4';
+      delBtn.className='no-print';delBtn.style.cssText='background:rgba(255,255,255,.2);color:white;border:none;border-radius:3px;padding:0 5px;cursor:pointer;font-size:14px;font-weight:700;margin-right:4px;line-height:1.4';
       delBtn.onclick=function(e){e.stopPropagation();delBlock(pnum,si+ri);};
       head.style.display='flex';head.style.alignItems='center';
       head.appendChild(titleSpan);head.appendChild(delBtn);
