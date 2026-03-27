@@ -222,8 +222,9 @@ body{font-family:"Tajawal",sans-serif;background:#eef1f5;color:#1a2a35;min-heigh
   <div class="preview-area" id="preview-area"></div>
 </div>
 
-<div class="modal-overlay" id="modal-info">
+<div class="modal-overlay" id="modal-info" onclick="if(event.target===this)closeModal('modal-info')">
   <div class="modal-box">
+    <div style="text-align:left;margin-bottom:6px"><button onclick="closeModal('modal-info')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;line-height:1">×</button></div>
     <div class="modal-icon">📋</div>
     <div class="modal-title">التقارير الجاهزة — استرشادية وقابلة للتعديل</div>
     <div class="modal-text">التقارير الجاهزة نماذج <strong>استرشادية</strong> يمكنك تحريرها بالكامل.<br>كما يتوفر خيار <strong>إنشاء تقرير من الصفر</strong>.</div>
@@ -234,8 +235,9 @@ body{font-family:"Tajawal",sans-serif;background:#eef1f5;color:#1a2a35;min-heigh
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-add-el">
+<div class="modal-overlay" id="modal-add-el" onclick="if(event.target===this)closeModal('modal-add-el')">
   <div class="modal-box" style="max-width:480px">
+    <div style="text-align:left;margin-bottom:6px"><button onclick="closeModal('modal-add-el')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;line-height:1">×</button></div>
     <div class="modal-icon">➕</div>
     <div class="modal-title">إضافة عنصر جديد</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
@@ -267,8 +269,9 @@ body{font-family:"Tajawal",sans-serif;background:#eef1f5;color:#1a2a35;min-heigh
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-save">
+<div class="modal-overlay" id="modal-save" onclick="if(event.target===this)closeModal('modal-save')">
   <div class="modal-box">
+    <div style="text-align:left;margin-bottom:6px"><button onclick="closeModal('modal-save')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;line-height:1">×</button></div>
     <div class="modal-icon">💾</div>
     <div class="modal-title">حفظ التقرير</div>
     <input type="text" class="f-inp" id="save-name-inp" placeholder="اسم التقرير" style="margin:10px 0 16px;font-size:13px">
