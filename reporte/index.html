@@ -422,6 +422,7 @@ function doSave(){
   var name=document.getElementById('save-name-inp').value.trim()||'تقرير';
   closeModal('modal-save');
   var flds={};document.querySelectorAll('#sb-fields input.f-inp,#sb-fields textarea.f-ta').forEach(function(e){if(e.id)flds[e.id]=e.value;});
+  document.querySelectorAll('.cb-body[contenteditable]').forEach(function(el,i){var b=el.closest('.c-block');if(b){var idx2=parseInt(b.dataset.idx||i);var pnum=parseInt(b.dataset.pnum||1);if(PB[pnum]&&PB[pnum][idx2])PB[pnum][idx2].content=el.innerHTML;}});
   var data={curJob:curJob,curGender:curGender,curReport:curReport,isFree:isFree,PB:PB,extraPages:extraPages,rStyle:rStyle,rFont:rFont,rHdrSz:rHdrSz,rFontSz:rFontSz,edName:document.getElementById('ed-name').textContent,flds:flds};
   var saved=[];try{saved=JSON.parse(localStorage.getItem('moe_rpts')||'[]');}catch(e){}
   var id=saveId||('r'+Date.now());saveId=id;
@@ -605,7 +606,7 @@ function buildPage(num){
 function mkRow(blocks,pnum,si,fs){
   var row=document.createElement('div');row.className='c-row '+(blocks.length===2?'col2':'col1');
   blocks.forEach(function(b,ri){
-    var el=document.createElement('div');el.className='c-block';
+    var el=document.createElement('div');el.className='c-block';el.dataset.idx=si+ri;el.dataset.pnum=pnum;
     if(moveMode)el.setAttribute('draggable','true');
     if(b.type==='img'){var img=document.createElement('img');img.className='block-img';img.src=b.imgSrc||'';img.style.height='160px';el.appendChild(img);}
     else{var bv=(b.rptId?fv('f_'+b.rptId):(b.content||'')).replace(/\n/g,'<br>');el.innerHTML='<div class="cb-head">◆ '+(b.title||'')+'</div><div class="cb-body" contenteditable="true" spellcheck="false" style="font-size:'+fs+'">'+bv+'</div>';}
