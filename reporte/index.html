@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محرر التقارير التعليمية</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cairo:wght@400;600;700;800&family=Noto+Kufi+Arabic:wght@400;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--green:#07A869;--blue:#3D7EB9;--teal:#0DA9A6;--dark:#15445A;--gold:#C1B48A}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Tajawal",sans-serif;background:#eef1f5;color:#1a2a35;min-height:100vh;display:flex;flex-direction:column}
+.app-header{background:linear-gradient(135deg,#15445A,#0DA9A6);color:white;padding:13px 24px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);flex-shrink:0}
+.app-header .logo{font-size:19px;font-weight:800}
+.app-header .sub{font-size:11px;opacity:.7}
+.screen{display:none;flex:1;flex-direction:column}
+.screen.active{display:flex;flex-direction:column}
+#screen-editor.active{display:flex;flex-direction:row;height:calc(100vh - 52px);overflow:hidden}
+.home-wrap{max-width:960px;margin:0 auto;padding:28px 20px;width:100%;flex:1}
+.home-title{text-align:center;font-size:24px;font-weight:800;color:var(--dark);margin-bottom:5px}
+.home-sub{text-align:center;color:#777;margin-bottom:22px;font-size:13px}
+.saved-sec{background:white;border-radius:14px;padding:16px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.saved-hd{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:10px}
+.saved-list{display:flex;flex-direction:column;gap:6px}
+.saved-empty{font-size:12px;color:#aaa;text-align:center;padding:10px}
+.saved-item{display:flex;align-items:center;gap:10px;padding:9px 13px;background:#f7f9fb;border-radius:9px;border:1.5px solid #e8e8e8}
+.saved-item:hover{border-color:var(--teal);background:#f0fafa}
+.si-icon{font-size:18px}.si-info{flex:1}.si-name{font-size:13px;font-weight:700;color:var(--dark)}.si-date{font-size:11px;color:#999}
+.si-actions{display:flex;gap:6px}
+.si-btn{padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-family:"Tajawal",sans-serif;font-size:11px;font-weight:600}
+.si-open{background:var(--teal);color:white}.si-del{background:#fee;color:#c44}
+.sec-lbl{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:10px}
+.jobs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:11px;margin-bottom:18px}
+.job-card{background:white;border-radius:13px;padding:18px 14px;cursor:pointer;border:2px solid transparent;transition:all .2s;box-shadow:0 2px 6px rgba(0,0,0,.06);text-align:center}
+.job-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 8px 20px rgba(13,169,166,.15)}
+.job-icon{font-size:30px;margin-bottom:7px}.job-name{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:2px}.job-desc{font-size:10px;color:#aaa}
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-bottom:18px}
+.tpl-card{background:white;border-radius:11px;padding:14px 12px;cursor:pointer;border:2px solid transparent;transition:all .2s;box-shadow:0 2px 6px rgba(0,0,0,.06);text-align:center}
+.tpl-card:hover{border-color:var(--green);transform:translateY(-2px)}
+.tpl-icon{font-size:24px;margin-bottom:5px}.tpl-name{font-size:11px;font-weight:700;color:var(--dark)}
+.free-btn{display:block;width:100%;padding:14px;background:linear-gradient(135deg,#3D7EB9,#0DA9A6,#07A869);color:white;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:"Tajawal",sans-serif}
+.home-footer{text-align:center;padding:13px;font-size:11px;color:#aaa;border-top:1px solid #e0e0e0;background:white;margin-top:auto}
+.home-footer span{color:var(--teal);font-weight:700}
+.sel-wrap{max-width:700px;margin:0 auto;padding:22px 20px;width:100%}
+.back-btn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600;margin-bottom:16px;padding:6px 13px;background:white;border-radius:7px;border:none;font-family:"Tajawal",sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.1);color:var(--dark)}
+.sel-title{font-size:18px;font-weight:800;color:var(--dark);margin-bottom:13px}
+.gender-box{background:white;border-radius:11px;padding:15px;margin-bottom:13px;box-shadow:0 1px 5px rgba(0,0,0,.06)}
+.gender-lbl{font-size:12px;font-weight:700;color:var(--dark);margin-bottom:8px}
+.g-btns{display:flex;gap:7px;flex-wrap:wrap}
+.g-btn{padding:6px 15px;border-radius:7px;border:2px solid #ddd;background:white;cursor:pointer;font-family:"Tajawal",sans-serif;font-size:12px;font-weight:600;color:#666}
+.g-btn.active{border-color:var(--teal);background:#e8f9f9;color:var(--dark)}
+.rpts-list{display:flex;flex-direction:column;gap:7px}
+.rpt-item{background:white;border-radius:11px;padding:12px 15px;cursor:pointer;border:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.rpt-item:hover{border-color:var(--green);background:#f0faf5}
+.ri-ico{font-size:18px}.ri-nm{font-size:13px;font-weight:700;color:var(--dark)}.ri-ds{font-size:11px;color:#aaa}.ri-arr{margin-right:auto;color:var(--green);font-size:14px}
+.sidebar{width:350px;min-width:290px;background:white;border-left:1px solid #e5e5e5;display:flex;flex-direction:column;overflow:hidden}
+.sb-head{padding:11px 15px;background:var(--dark);color:white;display:flex;align-items:center;gap:8px}
+.sh-title{font-size:13px;font-weight:700}.sh-back{background:rgba(255,255,255,.15);border:none;color:white;padding:4px 10px;border-radius:5px;cursor:pointer;font-family:"Tajawal",sans-serif;font-size:11px;margin-right:auto}
+.sb-body{flex:1;overflow-y:auto;padding:11px}
+.sb-body::-webkit-scrollbar{width:3px}.sb-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+.f-sec{margin-bottom:11px;background:#f7f8fb;border-radius:9px;padding:10px}
+.f-sec-title{font-size:10px;font-weight:700;color:var(--dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #e0e0e0}
+.f-grp{margin-bottom:7px}
+.f-lbl{font-size:11px;font-weight:600;color:#666;margin-bottom:3px;display:block}
+.f-inp,.f-ta{width:100%;padding:6px 9px;border:1.5px solid #e0e0e0;border-radius:6px;font-family:"Tajawal",sans-serif;font-size:12px;color:#333;background:white;outline:none}
+.f-inp:focus,.f-ta:focus{border-color:var(--teal)}
+.f-ta{resize:vertical;min-height:60px}
+.ig-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px}
+.ig-btn{padding:3px 9px;border-radius:5px;border:1.5px solid #ddd;background:white;cursor:pointer;font-family:"Tajawal",sans-serif;font-size:10px;font-weight:600;color:#666}
+.ig-btn.active{border-color:var(--teal);background:#e8f9f9;color:var(--dark)}
+.s-btns,.fnt-btns,.sz-btns{display:flex;gap:5px;flex-wrap:wrap}
+.s-btn,.fnt-btn,.sz-btn{padding:4px 10px;border-radius:6px;border:2px solid #ddd;background:white;cursor:pointer;font-family:"Tajawal",sans-serif;font-size:11px;font-weight:600;color:#666}
+.s-btn.active,.fnt-btn.active,.sz-btn.active{border-color:var(--green);background:#f0faf5;color:var(--dark)}
+.hdr-styles{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:5px}
+.hs-opt{border-radius:7px;overflow:hidden;cursor:pointer;border:2px solid transparent}
+.hs-opt.active{border-color:var(--green)}
+.hs-preview{height:25px;border-radius:4px}
+.hs-label{font-size:9px;text-align:center;color:#666;padding:2px;font-weight:600}
+.hdr-size-row{display:flex;gap:5px;margin-top:5px}
+.hs-size-btn{flex:1;padding:4px;border-radius:6px;border:2px solid #ddd;background:white;cursor:pointer;font-family:"Tajawal",sans-serif;font-size:10px;font-weight:700;text-align:center;color:#666}
+.hs-size-btn.active{border-color:var(--blue);background:#eaf2fb;color:var(--dark)}
+.sb-actions{padding:8px 11px;border-top:1px solid #eee;display:flex;flex-direction:column;gap:5px}
+.btn-save{padding:9px;background:var(--teal);color:white;border:none;border-radius:8px;font-family:"Tajawal",sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.btn-pdf{padding:9px;background:var(--dark);color:white;border:none;border-radius:8px;font-family:"Tajawal",sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.btn-addpage{padding:7px;background:#f0f4f8;color:var(--dark);border:2px dashed #aaa;border-radius:7px;font-family:"Tajawal",sans-serif;font-size:11px;font-weight:600;cursor:pointer}
+#screen-editor .preview-area{flex:1;background:#b8bec6;overflow-y:auto;padding:16px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.pg-toolbar{position:sticky;top:0;z-index:20;display:flex;justify-content:center;margin-bottom:3px}
+.pg-tb-inner{background:white;border-radius:9px;padding:5px 10px;display:flex;gap:6px;align-items:center;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.pt-btn{padding:4px 10px;border-radius:5px;border:1.5px solid #ddd;background:white;cursor:pointer;font-family:"Tajawal",sans-serif;font-size:10px;font-weight:600;color:#555}
+.pt-btn.active{border-color:var(--teal);background:#e8f9f9;color:var(--dark)}
+.pt-add{padding:4px 10px;border-radius:5px;border:none;background:var(--teal);cursor:pointer;font-family:"Tajawal",sans-serif;font-size:10px;font-weight:600;color:white}
+.a4-page{width:794px;background:white;box-shadow:0 4px 20px rgba(0,0,0,.18);border-radius:4px;overflow:hidden;direction:rtl;display:flex;flex-direction:column;min-height:1123px}
+.top-band,.bot-band{height:6px;flex-shrink:0}
+.pg-hdr{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:1.5px solid #eee}
+.ph-r{text-align:right}.ph-r p,.ph-l p{font-weight:700;line-height:1.7}
+.ph-c{text-align:center;padding:0 10px}
+.ph-c img{display:block;margin:0 auto}
+.ph-l{text-align:left}
+.rpt-title-box{margin:8px 28px;padding:7px 14px;border:2px solid var(--teal);border-radius:5px;text-align:center;font-size:14px;font-weight:800;color:#15445A}
+.info-row{display:grid;margin:0 28px 5px;gap:5px}
+.c3{grid-template-columns:repeat(3,1fr)}.c2{grid-template-columns:repeat(2,1fr)}
+.info-cell{border:1px solid #d0d0d0;border-radius:4px;overflow:hidden}
+.ic-lbl{background:linear-gradient(135deg,#15445A,#1d6080);color:white;font-size:9px;font-weight:700;padding:3px 8px;position:relative}
+.ic-lbl::after{content:"";position:absolute;bottom:0;right:0;left:0;height:2px;background:linear-gradient(90deg,#07A869,#0DA9A6)}
+.ic-val{padding:4px 8px;font-size:10.5px;font-weight:500;color:#333;min-height:22px}
+.page-content{flex:1;padding-bottom:8px}
+.c-row{margin:5px 28px;gap:5px;display:grid}
+.c-row.col1{grid-template-columns:1fr}
+.c-row.col2{grid-template-columns:1fr 1fr}
+.c-block{border:1px solid #d0d0d0;border-radius:6px;overflow:hidden;background:white;position:relative}
+.cb-head{background:linear-gradient(135deg,#15445A,#1d6080);color:white;padding:5px 10px;font-size:10px;font-weight:700;position:relative;user-select:none}
+.cb-head::after{content:"";position:absolute;bottom:0;right:0;left:0;height:2px;background:linear-gradient(90deg,#07A869,#0DA9A6)}
+.cb-body{padding:8px 10px;line-height:1.9;color:#333;min-height:50px;outline:none}
+.cb-body:focus{background:#fafff8}
+.c-block img.block-img{width:100%;display:block;object-fit:cover}
+.c-block.dragging{opacity:.4}
+.c-block.drag-top{border-top:3px solid var(--teal)}
+.c-block.drag-bot{border-bottom:3px solid var(--teal)}
+.resize-h{position:absolute;bottom:0;left:0;right:0;height:5px;cursor:ns-resize}
+.resize-h:hover{background:rgba(13,169,166,.25)}
+.add-el-row{margin:5px 28px}
+.add-el-btn{width:100%;padding:8px;border:2px dashed var(--teal);border-radius:7px;background:#f0fafa;color:var(--teal);font-family:"Tajawal",sans-serif;font-size:11px;font-weight:700;cursor:pointer}
+.no-print{}
+.page-footer{padding:9px 28px;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #eee;flex-shrink:0}
+.footer-sig{text-align:center;font-size:9px;color:#555}
+.sig-line{width:100px;border-top:1px solid #aaa;margin:8px auto 3px}
+.sig-canvas-wrap{border:1px solid #ddd;border-radius:5px;overflow:hidden;margin-top:5px;background:white;position:relative}
+.sig-canvas-wrap canvas{display:block;touch-action:none}
+.sig-clear-btn{position:absolute;top:3px;left:3px;background:rgba(200,40,40,.8);color:white;border:none;border-radius:3px;padding:2px 6px;font-size:10px;cursor:pointer;font-family:"Tajawal",sans-serif}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal-box{background:white;border-radius:16px;padding:24px;max-width:460px;width:92%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal-icon{font-size:38px;margin-bottom:9px}
+.modal-title{font-size:17px;font-weight:800;color:var(--dark);margin-bottom:7px}
+.modal-text{font-size:13px;color:#666;line-height:1.7;margin-bottom:16px}
+.modal-btns{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+.mbtn{padding:9px 20px;border-radius:9px;border:none;cursor:pointer;font-family:"Tajawal",sans-serif;font-size:13px;font-weight:700}
+.mbtn-dark{background:var(--dark);color:white}
+.mbtn-teal{background:var(--teal);color:white}
+.mbtn-gray{background:#f0f0f0;color:var(--dark)}
+.el-type-card{border:2px solid #e0e0e0;border-radius:11px;padding:14px;text-align:center;cursor:pointer;background:#fafafa}
+.el-type-card.active{border-color:var(--teal);background:#e8f9f9}
+.el-w-btn{flex:1;padding:7px;border-radius:7px;border:2px solid #ddd;background:white;cursor:pointer;font-family:"Tajawal",sans-serif;font-size:12px;font-weight:700;color:#666}
+.el-w-btn.active{border-color:var(--blue);background:#eaf2fb;color:var(--dark)}
+.up-area{border:2px dashed #ccc;border-radius:8px;padding:18px;text-align:center;cursor:pointer;background:#fafafa}
+.up-area input{display:none}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center}
+.overlay.active{display:flex}
+.ov-box{background:white;border-radius:14px;padding:24px;max-width:400px;width:90%;text-align:center}
+.ov-title{font-size:17px;font-weight:800;color:var(--dark);margin-bottom:5px}
+.ov-text{color:#777;font-size:12px;margin-bottom:12px}
+.spinner{display:block;width:28px;height:28px;border:3px solid rgba(0,0,0,.1);border-top-color:var(--dark);border-radius:50%;animation:spin .8s linear infinite;margin:10px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ov-close{padding:7px 20px;background:var(--dark);color:white;border:none;border-radius:7px;font-family:"Tajawal",sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--dark);color:white;padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:3000;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:900px){#screen-editor.active{flex-direction:column-reverse;height:auto}.sidebar{width:100%}.a4-page{width:100%}}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <div><div class="logo">📋 محرر التقارير التعليمية</div><div class="sub">إنشاء وتحرير تقارير احترافية بهوية وزارة التعليم</div></div>
+</div>
+
+<div class="screen active" id="screen-home">
+  <div class="home-wrap">
+    <div class="home-title">محرر التقارير التعليمية</div>
+    <div class="home-sub">اختر وصفك الوظيفي</div>
+    <div class="saved-sec">
+      <div class="saved-hd">💾 تقاريري المحفوظة <span id="saved-count" style="font-size:10px;color:#aaa;font-weight:400"></span></div>
+      <div class="saved-list" id="saved-list"><div class="saved-empty">لا توجد تقارير محفوظة بعد</div></div>
+    </div>
+    <div class="sec-lbl">🏢 اختر وصفك الوظيفي</div>
+    <div class="jobs-grid">
+      <div class="job-card" onclick="selectJob('teacher')"><div class="job-icon">👨‍🏫</div><div class="job-name">معلم</div><div class="job-desc">تقارير التدريس والأنشطة</div></div>
+      <div class="job-card" onclick="selectJob('activity')"><div class="job-icon">🏃</div><div class="job-name">رائد نشاط</div><div class="job-desc">تقارير المناسبات والبرامج</div></div>
+      <div class="job-card" onclick="selectJob('vice')"><div class="job-icon">📋</div><div class="job-name">وكيل</div><div class="job-desc">تقارير الزيارات والاجتماعات</div></div>
+      <div class="job-card" onclick="selectJob('principal')"><div class="job-icon">🏫</div><div class="job-name">مدير مدرسة</div><div class="job-desc">تقارير المبادرات والإشراف</div></div>
+      <div class="job-card" onclick="selectJob('lab')"><div class="job-icon">🔬</div><div class="job-name">محضر مختبر</div><div class="job-desc">تقارير الجرد والتجارب</div></div>
+      <div class="job-card" onclick="selectJob('counselor')"><div class="job-icon">🧭</div><div class="job-name">موجه طلابي</div><div class="job-desc">تقارير الإرشاد والمتابعة</div></div>
+    </div>
+    <div class="sec-lbl">✏️ قوالب التقرير الحر</div>
+    <div class="tpl-grid">
+      <div class="tpl-card" onclick="startTemplate('initiative')"><div class="tpl-icon">🚀</div><div class="tpl-name">مبادرة / نشاط</div></div>
+      <div class="tpl-card" onclick="startTemplate('meeting')"><div class="tpl-icon">👥</div><div class="tpl-name">اجتماع</div></div>
+      <div class="tpl-card" onclick="startTemplate('visit')"><div class="tpl-icon">🔍</div><div class="tpl-name">زيارة</div></div>
+      <div class="tpl-card" onclick="startTemplate('program')"><div class="tpl-icon">🎓</div><div class="tpl-name">برنامج</div></div>
+      <div class="tpl-card" onclick="startTemplate('empty')"><div class="tpl-icon">📄</div><div class="tpl-name">فارغ</div></div>
+    </div>
+  </div>
+  <div class="home-footer">هذه الخدمة مهداة من <span>منصة مؤشرات للمنتجات التعليمية والمدرسية</span></div>
+</div>
+
+<div class="screen" id="screen-select">
+  <div class="sel-wrap">
+    <button class="back-btn" onclick="goHome()">→ رجوع</button>
+    <div class="sel-title" id="sel-title">اختر نوع التقرير</div>
+    <div class="gender-box">
+      <div class="gender-lbl">مسماك الوظيفي في التقرير:</div>
+      <div class="g-btns" id="gender-btns"></div>
+      <div style="margin-top:8px"><input type="text" class="f-inp" id="custom-title" placeholder="أو اكتب مسماك الحقيقي..." style="max-width:270px"></div>
+    </div>
+    <div class="rpts-list" id="reports-list"></div>
+    <div style="margin-top:12px"><button class="free-btn" onclick="startTemplate('empty')" style="font-size:13px;padding:12px">✏️ إنشاء تقرير من الصفر</button></div>
+  </div>
+</div>
+
+<div class="screen" id="screen-editor">
+  <div class="sidebar">
+    <div class="sb-head">
+      <div><div class="sh-title" id="ed-name">التقرير</div><div style="font-size:10px;opacity:.6" id="ed-job"></div></div>
+      <button class="sh-back" onclick="goSelect()">→ رجوع</button>
+    </div>
+    <div class="sb-body" id="sb-fields"></div>
+    <div class="sb-actions">
+      <button class="btn-save" onclick="saveReport()">💾 حفظ التقرير</button>
+      <button class="btn-addpage" onclick="addPage()">+ إضافة صفحة</button>
+      <button class="btn-pdf" onclick="downloadPDF()">⬇ تحميل PDF</button>
+    </div>
+  </div>
+  <div class="preview-area" id="preview-area"></div>
+</div>
+
+<div class="modal-overlay" id="modal-info">
+  <div class="modal-box">
+    <div class="modal-icon">📋</div>
+    <div class="modal-title">التقارير الجاهزة — استرشادية وقابلة للتعديل</div>
+    <div class="modal-text">التقارير الجاهزة نماذج <strong>استرشادية</strong> يمكنك تحريرها بالكامل.<br>كما يتوفر خيار <strong>إنشاء تقرير من الصفر</strong>.</div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-dark" onclick="closeModal('modal-info');showScreen('select')">اختر تقريراً جاهزاً</button>
+      <button class="mbtn mbtn-teal" onclick="closeModal('modal-info');startTemplate('empty')">إنشاء من الصفر</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-el">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-icon">➕</div>
+    <div class="modal-title">إضافة عنصر جديد</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div id="el-t-text" class="el-type-card active" onclick="selElType('text')"><div style="font-size:24px;margin-bottom:5px">📝</div><div style="font-size:12px;font-weight:700;color:var(--dark)">قسم نصي</div><div style="font-size:10px;color:#aaa">بعنوان ومحتوى</div></div>
+      <div id="el-t-img" class="el-type-card" onclick="selElType('img')"><div style="font-size:24px;margin-bottom:5px">🖼️</div><div style="font-size:12px;font-weight:700;color:var(--dark)">صورة / شاهد</div><div style="font-size:10px;color:#aaa">تتحرك مثل العناصر</div></div>
+    </div>
+    <div id="el-text-f" style="text-align:right">
+      <div class="f-grp" style="margin-bottom:9px"><label class="f-lbl">عنوان القسم</label><input class="f-inp" id="new-el-title" placeholder="مثال: الأهداف"></div>
+      <div class="f-grp"><label class="f-lbl">المحتوى (اختياري)</label><textarea class="f-ta" id="new-el-content" placeholder="اكتب المحتوى هنا..." style="min-height:60px"></textarea></div>
+      <div style="margin-top:8px"><label class="f-lbl">عرض القسم</label>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="el-w-btn active" id="elw-half" onclick="selElW('half')">نصف صفحة</button>
+          <button class="el-w-btn" id="elw-full" onclick="selElW('full')">صفحة كاملة</button>
+        </div>
+      </div>
+    </div>
+    <div id="el-img-f" style="display:none">
+      <div class="up-area" onclick="document.getElementById('el-img-inp').click()">
+        <input type="file" id="el-img-inp" accept="image/*" onchange="previewElImg(this)">
+        <div style="font-size:26px;margin-bottom:4px">📷</div>
+        <div style="font-size:11px;color:#aaa">اضغط لاختيار صورة</div>
+      </div>
+      <div id="el-img-prev" style="margin-top:8px;display:none"><img id="el-img-prev-img" style="width:100%;border-radius:8px;max-height:130px;object-fit:cover"></div>
+    </div>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="mbtn mbtn-dark" onclick="confirmAddEl()">إضافة للتقرير</button>
+      <button class="mbtn mbtn-gray" onclick="closeModal('modal-add-el')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-save">
+  <div class="modal-box">
+    <div class="modal-icon">💾</div>
+    <div class="modal-title">حفظ التقرير</div>
+    <input type="text" class="f-inp" id="save-name-inp" placeholder="اسم التقرير" style="margin:10px 0 16px;font-size:13px">
+    <div class="modal-btns">
+      <button class="mbtn mbtn-dark" onclick="doSave()">حفظ</button>
+      <button class="mbtn mbtn-gray" onclick="closeModal('modal-save')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="ov-box">
+    <div class="ov-title" id="ov-title">جاري المعالجة...</div>
+    <div class="ov-text" id="ov-text">يرجى الانتظار</div>
+    <div class="spinner" id="ov-spin"></div>
+    <button class="ov-close" id="ov-close" style="display:none" onclick="closeOv()">إغلاق</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var LC='logo_color.png';
+var LW='logo_white.png';
+
+var TPL={
+  initiative:{name:'مبادرة / نشاط',blocks:[
+    {title:'شعار المبادرة / اسم النشاط',content:'',cols:2},
+    {title:'أسلوب التنفيذ',content:'',cols:1},{title:'المشاركون',content:'',cols:1},
+    {title:'الأهداف',content:'',cols:1},{title:'الأنشطة المنفذة',content:'',cols:1},
+    {title:'النتائج والمخرجات',content:'',cols:1},{title:'ملاحظات',content:'',cols:1}]},
+  meeting:{name:'اجتماع',blocks:[
+    {title:'نوع الاجتماع والمكان',content:'',cols:1},{title:'الحاضرون',content:'',cols:1},
+    {title:'جدول الأعمال',content:'',cols:2},
+    {title:'القرارات والتوصيات',content:'',cols:1},{title:'ملاحظات',content:'',cols:1}]},
+  visit:{name:'زيارة',blocks:[
+    {title:'بيانات الزيارة',content:'',cols:2},
+    {title:'الملاحظات والمشاهدات',content:'',cols:2},
+    {title:'الإيجابيات',content:'',cols:1},{title:'التوصيات والمقترحات',content:'',cols:1}]},
+  program:{name:'برنامج',blocks:[
+    {title:'وصف البرنامج',content:'',cols:2},
+    {title:'الأهداف',content:'',cols:1},{title:'خطوات التنفيذ',content:'',cols:1},
+    {title:'المخرجات والنتائج',content:'',cols:2}]},
+  empty:{name:'تقرير حر',blocks:[{title:'القسم الأول',content:'',cols:2}]}
+};
+
+var JOBS={
+  teacher:{name:'معلم',genders:['معلم','معلمة','أستاذ','أستاذة'],reports:[
+    {id:'activity_report',name:'تقرير تنفيذ نشاط',desc:'توثيق نشاط صفي أو لاصفي',icon:'📌'},
+    {id:'strategy_report',name:'تقرير استخدام استراتيجية تدريس',desc:'توثيق استخدام استراتيجية محددة',icon:'🎯'},
+    {id:'tech_report',name:'تقرير توظيف تقنية',desc:'توثيق استخدام برنامج أو تطبيق',icon:'💻'},
+    {id:'results_report',name:'تقرير تحليل نتائج',desc:'تحليل نتائج الاختبارات',icon:'📊'},
+    {id:'parent_report',name:'تقرير تواصل مع أولياء الأمور',desc:'توثيق لقاء مع الأهالي',icon:'👨‍👩‍👧'}]},
+  activity:{name:'رائد نشاط',genders:['رائد نشاط','رائدة نشاط'],reports:[
+    {id:'event_report',name:'تقرير يوم / مناسبة عالمية',desc:'توثيق الاحتفال بيوم عالمي',icon:'🌍'},
+    {id:'initiative_report',name:'تقرير تنفيذ مبادرة',desc:'توثيق مبادرة طلابية أو مجتمعية',icon:'🚀'},
+    {id:'program_report',name:'تقرير برنامج طلابي',desc:'توثيق برنامج أو فعالية طلابية',icon:'🎓'}]},
+  vice:{name:'وكيل',genders:['وكيل','وكيلة'],reports:[
+    {id:'visit_report',name:'تقرير زيارة صفية',desc:'توثيق زيارة إشرافية للفصل',icon:'🏫'},
+    {id:'meeting_report',name:'تقرير اجتماع',desc:'توثيق محاضر الاجتماعات',icon:'👥'},
+    {id:'followup_report',name:'تقرير متابعة',desc:'توثيق متابعة الأداء',icon:'📝'}]},
+  principal:{name:'مدير مدرسة',genders:['مدير المدرسة','مديرة المدرسة'],reports:[
+    {id:'school_initiative',name:'تقرير مبادرة مدرسية',desc:'توثيق مبادرة على مستوى المدرسة',icon:'🏆'},
+    {id:'supervision_visit',name:'تقرير زيارة إشرافية',desc:'توثيق زيارة إشرافية',icon:'🔍'},
+    {id:'council_report',name:'تقرير اجتماع مجلس',desc:'محضر اجتماع مجلس المدرسة',icon:'📋'}]},
+  lab:{name:'محضر مختبر',genders:['محضر مختبر','محضرة مختبر'],reports:[
+    {id:'inventory_report',name:'تقرير جرد أجهزة',desc:'توثيق جرد معدات المختبر',icon:'🔬'},
+    {id:'experiment_report',name:'تقرير تنفيذ تجربة',desc:'توثيق تجربة علمية',icon:'⚗️'},
+    {id:'maintenance_report',name:'تقرير صيانة',desc:'توثيق أعمال الصيانة',icon:'🔧'}]},
+  counselor:{name:'موجه طلابي',genders:['موجه طلابي','موجهة طلابية','مرشد طلابي','مرشدة طلابية'],reports:[
+    {id:'guidance_report',name:'تقرير إرشاد',desc:'توثيق جلسة إرشادية',icon:'🧭'},
+    {id:'case_report',name:'تقرير متابعة حالة',desc:'توثيق متابعة حالة طالب',icon:'👤'}]}
+};
+
+var RPT={
+  activity_report:{title:'تقرير تنفيذ نشاط',basic:[{id:'activity_name',lbl:'اسم النشاط',ph:'نشاط القراءة'},{id:'impl_date',lbl:'تاريخ التنفيذ',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'participants',lbl:'المشاركون',ph:'طلاب الصف الثالث'}],second:[{id:'subject',lbl:'المادة',ph:'اللغة العربية'},{id:'location',lbl:'المكان',ph:'الفصل'},{id:'duration',lbl:'المدة',ph:'٤٥ دقيقة'}],blocks:[{title:'الأهداف',cols:1},{title:'خطوات التنفيذ',cols:1},{title:'النتائج',cols:1},{title:'ملاحظات',cols:1}]},
+  strategy_report:{title:'تقرير استخدام استراتيجية تدريس',basic:[{id:'strategy_name',lbl:'اسم الاستراتيجية',ph:'التعلم التعاوني'},{id:'impl_date',lbl:'تاريخ التطبيق',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'subject',lbl:'المادة والصف',ph:'الرياضيات'}],second:[{id:'students_count',lbl:'عدد الطلاب',ph:'٣٢ طالب'},{id:'duration',lbl:'المدة',ph:'٤٥ دقيقة'},{id:'result',lbl:'النتيجة',ph:'ممتاز'}],blocks:[{title:'وصف الاستراتيجية',cols:2},{title:'خطوات التطبيق',cols:1},{title:'النتائج والمخرجات',cols:1}]},
+  tech_report:{title:'تقرير توظيف تقنية',basic:[{id:'tech_name',lbl:'اسم البرنامج',ph:'Classera'},{id:'impl_date',lbl:'تاريخ التوظيف',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'subject',lbl:'المادة والصف',ph:'العلوم'}],second:[{id:'usage_goal',lbl:'هدف التوظيف',ph:'تقديم المحتوى'},{id:'students_count',lbl:'عدد الطلاب',ph:'٣٠ طالب'},{id:'duration',lbl:'المدة',ph:'٤٥ دقيقة'}],blocks:[{title:'وصف البرنامج',cols:2},{title:'خطوات الاستخدام',cols:1},{title:'النتائج',cols:1}]},
+  results_report:{title:'تقرير تحليل نتائج',basic:[{id:'exam_name',lbl:'الاختبار',ph:'اختبار الفصل الأول'},{id:'subject',lbl:'المادة والصف',ph:'الرياضيات'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٣/١٥هـ'}],second:[{id:'students_count',lbl:'عدد الطلاب',ph:'٣٠ طالب'},{id:'pass_rate',lbl:'نسبة النجاح',ph:'٨٥٪'},{id:'avg_grade',lbl:'المتوسط',ph:'٧٨ من ١٠٠'}],blocks:[{title:'تحليل النتائج',cols:2},{title:'نقاط القوة',cols:1},{title:'نقاط الضعف وخطة العلاج',cols:1}]},
+  parent_report:{title:'تقرير تواصل مع أولياء الأمور',basic:[{id:'meeting_type',lbl:'نوع اللقاء',ph:'اجتماع دوري'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'parents_count',lbl:'عدد المشاركين',ph:'٢٤ ولي أمر'}],second:[{id:'subject',lbl:'الموضوع',ph:'متابعة مستوى الطلاب'},{id:'location',lbl:'المكان',ph:'قاعة الاجتماعات'},{id:'duration',lbl:'المدة',ph:'٩٠ دقيقة'}],blocks:[{title:'محاور اللقاء',cols:2},{title:'نتائج اللقاء والتوصيات',cols:1},{title:'ملاحظات',cols:1}]},
+  event_report:{title:'تقرير يوم / مناسبة عالمية',basic:[{id:'event_name',lbl:'اسم المناسبة',ph:'اليوم العالمي للغة العربية'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٤/١٨هـ'},{id:'participants',lbl:'المشاركون',ph:'الطلاب والمنسوبون'}],second:[{id:'location',lbl:'المكان',ph:'فناء المدرسة'},{id:'target',lbl:'الفئة المستهدفة',ph:'الطلاب'},{id:'impl_method',lbl:'أسلوب التنفيذ',ph:'حضوري'}],blocks:[{title:'الأهداف',cols:1},{title:'الأنشطة المنفذة',cols:1},{title:'النتائج والمخرجات',cols:1},{title:'ملاحظات',cols:1}]},
+  initiative_report:{title:'تقرير تنفيذ مبادرة',basic:[{id:'impl_method',lbl:'أسلوب التنفيذ',ph:'دعم مادي'},{id:'participants',lbl:'المشاركون',ph:'منسوبو المدرسة'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٩/٠٢هـ'}],second:[{id:'slogan',lbl:'شعار المبادرة',ph:'رمضان عطاء وتكافل'},{id:'location',lbl:'المكان',ph:'المدرسة'},{id:'target',lbl:'الفئة المستهدفة',ph:'أسر الطلاب'}],blocks:[{title:'فكرة المبادرة',cols:2},{title:'الأهداف',cols:1},{title:'مكونات المبادرة',cols:1},{title:'الأنشطة',cols:1},{title:'مؤشرات النجاح',cols:1}]},
+  program_report:{title:'تقرير برنامج طلابي',basic:[{id:'program_name',lbl:'اسم البرنامج',ph:'برنامج القيادة'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'participants',lbl:'المشاركون',ph:'طلاب المرحلة الثانوية'}],second:[{id:'students_count',lbl:'عدد المستفيدين',ph:'٤٨ طالب'},{id:'duration',lbl:'المدة',ph:'٤ أسابيع'},{id:'location',lbl:'المكان',ph:'المدرسة'}],blocks:[{title:'الأهداف',cols:2},{title:'الأنشطة المنفذة',cols:1},{title:'النتائج والمخرجات',cols:1}]},
+  visit_report:{title:'تقرير زيارة صفية',basic:[{id:'teacher_name',lbl:'اسم المعلم',ph:'أحمد محمد العمري'},{id:'subject',lbl:'المادة والصف',ph:'الرياضيات - الثالث'},{id:'visit_date',lbl:'تاريخ الزيارة',ph:'١٤٤٧/٠٣/١٥هـ'}],second:[{id:'period',lbl:'الحصة',ph:'الثالثة'},{id:'students_count',lbl:'عدد الطلاب',ph:'٣٠ طالب'},{id:'duration',lbl:'المدة',ph:'٤٥ دقيقة'}],blocks:[{title:'الملاحظات والمشاهدات',cols:2},{title:'نقاط القوة',cols:1},{title:'المقترحات للتطوير',cols:1}]},
+  meeting_report:{title:'تقرير اجتماع',basic:[{id:'meeting_type',lbl:'نوع الاجتماع',ph:'اجتماع مجلس المعلمين'},{id:'impl_date',lbl:'التاريخ والوقت',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'location',lbl:'المكان',ph:'قاعة الاجتماعات'}],second:[{id:'attendees_count',lbl:'عدد الحاضرين',ph:'١٥ معلم'},{id:'chairman',lbl:'رئيس الاجتماع',ph:'مدير المدرسة'},{id:'duration',lbl:'المدة',ph:'٦٠ دقيقة'}],blocks:[{title:'جدول الأعمال',cols:2},{title:'القرارات والتوصيات',cols:1},{title:'ملاحظات',cols:1}]},
+  followup_report:{title:'تقرير متابعة',basic:[{id:'followup_type',lbl:'نوع المتابعة',ph:'متابعة الغياب'},{id:'period',lbl:'الفترة',ph:'الفصل الأول'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٣/١٥هـ'}],second:[{id:'students_count',lbl:'عدد الطلاب',ph:'٥ طلاب'},{id:'supervisor',lbl:'المشرف',ph:'وكيل المدرسة'},{id:'status',lbl:'الحالة',ph:'جيدة'}],blocks:[{title:'ملخص المتابعة',cols:2},{title:'النتائج',cols:1},{title:'التوصيات',cols:1}]},
+  school_initiative:{title:'تقرير مبادرة مدرسية',basic:[{id:'initiative_name',lbl:'اسم المبادرة',ph:'مدرستي بيئتي'},{id:'impl_date',lbl:'تاريخ الإطلاق',ph:'١٤٤٧/٠١/١٥هـ'},{id:'duration',lbl:'المدة',ph:'فصل دراسي'}],second:[{id:'goal',lbl:'هدف المبادرة',ph:'رفع مستوى البيئة'},{id:'participants',lbl:'المشاركون',ph:'منسوبو المدرسة'},{id:'target',lbl:'الفئة المستهدفة',ph:'جميع المنسوبين'}],blocks:[{title:'فكرة المبادرة والهدف العام',cols:2},{title:'الأنشطة المنفذة',cols:1},{title:'النتائج والمخرجات',cols:1}]},
+  supervision_visit:{title:'تقرير زيارة إشرافية',basic:[{id:'supervisor_name',lbl:'اسم المشرف',ph:'محمد سعد العتيبي'},{id:'visit_date',lbl:'تاريخ الزيارة',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'visit_type',lbl:'نوع الزيارة',ph:'زيارة دورية'}],second:[{id:'visited_sections',lbl:'الجوانب المزارة',ph:'الفصول الدراسية'},{id:'duration',lbl:'المدة',ph:'٣ ساعات'},{id:'result',lbl:'النتيجة',ph:'جيد جداً'}],blocks:[{title:'الملاحظات والمشاهدات',cols:2},{title:'الإيجابيات',cols:1},{title:'التوجيهات والتوصيات',cols:1}]},
+  council_report:{title:'تقرير اجتماع مجلس المدرسة',basic:[{id:'session_num',lbl:'رقم الجلسة',ph:'الجلسة الأولى'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'location',lbl:'المكان',ph:'قاعة الاجتماعات'}],second:[{id:'attendees',lbl:'الحاضرون',ph:'أعضاء مجلس المدرسة'},{id:'attendees_count',lbl:'العدد',ph:'١٢ عضو'},{id:'chairman',lbl:'رئيس الجلسة',ph:'مدير المدرسة'}],blocks:[{title:'جدول الأعمال',cols:2},{title:'القرارات الصادرة',cols:1},{title:'ملاحظات ومتابعات',cols:1}]},
+  inventory_report:{title:'تقرير جرد أجهزة المختبر',basic:[{id:'lab_name',lbl:'اسم المختبر',ph:'مختبر العلوم'},{id:'impl_date',lbl:'تاريخ الجرد',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'semester',lbl:'الفصل',ph:'الأول'}],second:[{id:'total_items',lbl:'إجمالي الأجهزة',ph:'٤٥ جهاز'},{id:'working',lbl:'الصالح',ph:'٣٨ جهاز'},{id:'damaged',lbl:'التالف',ph:'٧ أجهزة'}],blocks:[{title:'تفاصيل الجرد',cols:2},{title:'التوصيات والملاحظات',cols:2}]},
+  experiment_report:{title:'تقرير تنفيذ تجربة علمية',basic:[{id:'exp_name',lbl:'اسم التجربة',ph:'تجربة التحليل الكهربائي'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'subject',lbl:'المادة والصف',ph:'الكيمياء'}],second:[{id:'students_count',lbl:'عدد الطلاب',ph:'٢٤ طالب'},{id:'duration',lbl:'المدة',ph:'٩٠ دقيقة'},{id:'result',lbl:'النتيجة',ph:'ناجحة'}],blocks:[{title:'أهداف التجربة',cols:2},{title:'خطوات التجربة والأدوات',cols:1},{title:'النتائج والخلاصة',cols:1}]},
+  maintenance_report:{title:'تقرير صيانة مختبر',basic:[{id:'maint_type',lbl:'نوع الصيانة',ph:'صيانة دورية'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'technician',lbl:'المسؤول',ph:'فني الصيانة'}],second:[{id:'items_count',lbl:'عدد الأجهزة',ph:'١٢ جهاز'},{id:'cost',lbl:'التكلفة',ph:'٢٥٠٠ ريال'},{id:'status',lbl:'الحالة',ph:'جيدة'}],blocks:[{title:'تفاصيل الصيانة',cols:2},{title:'التوصيات',cols:2}]},
+  guidance_report:{title:'تقرير إرشاد طلابي',basic:[{id:'session_type',lbl:'نوع الجلسة',ph:'إرشاد جماعي'},{id:'topic',lbl:'الموضوع',ph:'إدارة الوقت'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٣/١٥هـ'}],second:[{id:'students',lbl:'الطلاب',ph:'طلاب الصف الثالث'},{id:'students_count',lbl:'العدد',ph:'٢٨ طالب'},{id:'duration',lbl:'المدة',ph:'٤٥ دقيقة'}],blocks:[{title:'أهداف الجلسة',cols:2},{title:'محتوى الجلسة',cols:1},{title:'نتائج وتوصيات',cols:1}]},
+  case_report:{title:'تقرير متابعة حالة طالب',basic:[{id:'case_type',lbl:'نوع الحالة',ph:'تأخر دراسي'},{id:'impl_date',lbl:'التاريخ',ph:'١٤٤٧/٠٣/١٥هـ'},{id:'grade',lbl:'الصف',ph:'الثاني المتوسط'}],second:[{id:'referral',lbl:'جهة الإحالة',ph:'المعلم'},{id:'sessions_count',lbl:'عدد الجلسات',ph:'٣ جلسات'},{id:'status',lbl:'الحالة',ph:'تحت المتابعة'}],blocks:[{title:'وصف الحالة',cols:2},{title:'التدخلات والإجراءات',cols:1},{title:'النتائج والتوصيات',cols:1}]}
+};
+
+var HS={
+  white:{label:'أبيض رسمي',bg:'white',band:'linear-gradient(90deg,#07A869,#0DA9A6,#3D7EB9)',logo:function(){return LC;},tc:'#15445A'},
+  dark:{label:'كحلي',bg:'#15445A',band:'linear-gradient(90deg,#07A869,#0DA9A6,#3D7EB9)',logo:function(){return LW;},tc:'white'},
+  teal:{label:'تيل',bg:'linear-gradient(135deg,#0DA9A6,#07A869)',band:'linear-gradient(90deg,#15445A,#1d6080)',logo:function(){return LW;},tc:'white'},
+  green:{label:'أخضر',bg:'#07A869',band:'linear-gradient(90deg,#15445A,#0DA9A6)',logo:function(){return LW;},tc:'white'},
+  blue:{label:'أزرق',bg:'#3D7EB9',band:'linear-gradient(90deg,#07A869,#0DA9A6)',logo:function(){return LW;},tc:'white'},
+  grad:{label:'تدرج',bg:'linear-gradient(135deg,#15445A,#0DA9A6,#07A869)',band:'linear-gradient(90deg,#C1B48A,#07A869)',logo:function(){return LW;},tc:'white'}
+};
+var SZ={sm:{label:'صغير',pad:'7px 28px',lh:'50px'},md:{label:'متوسط',pad:'14px 28px',lh:'68px'},lg:{label:'كبير',pad:'22px 28px',lh:'88px'}};
+var FS={xs:'9px',sm:'10.5px',md:'12px',lg:'14px',xl:'16px'};
+
+var curJob=null,curGender='',curReport=null,isFree=false,extraPages=0,moveMode=false,saveId=null;
+var rStyle='white',rFont='Tajawal',rHdrSz='md',rFontSz='md';
+var PB={1:[]};
+var s1Data=null,s2Data=null;
+var elType='text',elWidth='half',elImgSrc=null;
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var el=document.getElementById('screen-'+id);if(el)el.classList.add('active');}
+function goHome(){showScreen('home');loadSaved();}
+function goSelect(){if(isFree){showScreen('home');return;}showScreen('select');}
+
+function loadSaved(){
+  var list=document.getElementById('saved-list'),cnt=document.getElementById('saved-count');
+  var saved=[];try{saved=JSON.parse(localStorage.getItem('moe_rpts')||'[]');}catch(e){}
+  cnt.textContent=saved.length?'('+saved.length+')':'';
+  if(!saved.length){list.innerHTML='<div class="saved-empty">لا توجد تقارير محفوظة بعد</div>';return;}
+  list.innerHTML=saved.map(function(s){return '<div class="saved-item"><span class="si-icon">📄</span><div class="si-info"><div class="si-name">'+s.name+'</div><div class="si-date">'+s.date+'</div></div><div class="si-actions"><button class="si-btn si-open" onclick="openSaved(\''+s.id+'\')">فتح</button><button class="si-btn si-del" onclick="delSaved(\''+s.id+'\')">حذف</button></div></div>';}).join('');
+}
+
+function openSaved(id){
+  var saved=[];try{saved=JSON.parse(localStorage.getItem('moe_rpts')||'[]');}catch(e){}
+  var item=saved.find(function(s){return s.id===id;});if(!item)return;
+  saveId=id;var d=item.data;
+  curJob=d.curJob;curGender=d.curGender;curReport=d.curReport;isFree=d.isFree;
+  PB=d.PB||{1:[]};extraPages=d.extraPages||0;
+  rStyle=d.rStyle||'white';rFont=d.rFont||'Tajawal';rHdrSz=d.rHdrSz||'md';rFontSz=d.rFontSz||'md';
+  document.getElementById('ed-name').textContent=d.edName||'التقرير';
+  document.getElementById('ed-job').textContent=curGender;
+  if(isFree)buildFreeSb();else buildSb(RPT[curReport]);
+  setTimeout(function(){if(d.flds)Object.keys(d.flds).forEach(function(k){var e=document.getElementById(k);if(e)e.value=d.flds[k];});renderPrev();},80);
+  showScreen('editor');
+}
+
+function delSaved(id){
+  var saved=[];try{saved=JSON.parse(localStorage.getItem('moe_rpts')||'[]');}catch(e){}
+  localStorage.setItem('moe_rpts',JSON.stringify(saved.filter(function(s){return s.id!==id;})));
+  loadSaved();toast('تم حذف التقرير');
+}
+
+function saveReport(){
+  document.getElementById('save-name-inp').value=fv('f_title')||(isFree?'تقرير حر':(RPT[curReport]?RPT[curReport].title:'تقرير'));
+  openModal('modal-save');
+}
+
+function doSave(){
+  var name=document.getElementById('save-name-inp').value.trim()||'تقرير';
+  closeModal('modal-save');
+  var flds={};document.querySelectorAll('#sb-fields input.f-inp,#sb-fields textarea.f-ta').forEach(function(e){if(e.id)flds[e.id]=e.value;});
+  var data={curJob:curJob,curGender:curGender,curReport:curReport,isFree:isFree,PB:PB,extraPages:extraPages,rStyle:rStyle,rFont:rFont,rHdrSz:rHdrSz,rFontSz:rFontSz,edName:document.getElementById('ed-name').textContent,flds:flds};
+  var saved=[];try{saved=JSON.parse(localStorage.getItem('moe_rpts')||'[]');}catch(e){}
+  var id=saveId||('r'+Date.now());saveId=id;
+  var idx=saved.findIndex(function(s){return s.id===id;});
+  var entry={id:id,name:name,date:new Date().toLocaleDateString('ar-SA'),data:data};
+  if(idx>=0)saved[idx]=entry;else saved.unshift(entry);
+  localStorage.setItem('moe_rpts',JSON.stringify(saved));
+  toast('✅ تم حفظ التقرير');
+}
+
+function selectJob(j){
+  curJob=j;var job=JOBS[j];
+  document.getElementById('sel-title').textContent='التقارير المتاحة — '+job.name;
+  var gb=document.getElementById('gender-btns');gb.innerHTML='';
+  job.genders.forEach(function(g,i){
+    var b=document.createElement('button');b.className='g-btn'+(i===0?' active':'');b.textContent=g;
+    b.onclick=function(){document.querySelectorAll('.g-btn').forEach(function(x){x.classList.remove('active');});b.classList.add('active');curGender=document.getElementById('custom-title').value||g;};
+    gb.appendChild(b);
+  });
+  curGender=job.genders[0];
+  document.getElementById('custom-title').value='';
+  document.getElementById('custom-title').oninput=function(){curGender=this.value||(document.querySelector('.g-btn.active')?document.querySelector('.g-btn.active').textContent:job.genders[0]);};
+  var rl=document.getElementById('reports-list');rl.innerHTML='';
+  job.reports.forEach(function(r){
+    var d=document.createElement('div');d.className='rpt-item';
+    d.innerHTML='<span class="ri-ico">'+r.icon+'</span><div><div class="ri-nm">'+r.name+'</div><div class="ri-ds">'+r.desc+'</div></div><span class="ri-arr">←</span>';
+    d.onclick=function(){startReport(r.id,r.name);};
+    rl.appendChild(d);
+  });
+  openModal('modal-info');
+}
+
+function startReport(rid,rname){
+  isFree=false;curReport=rid;extraPages=0;moveMode=false;saveId=null;
+  var f=RPT[rid];
+  PB={1:f&&f.blocks?f.blocks.map(function(b,i){return{id:Date.now()+i,title:b.title||b.lbl,content:'',cols:b.cols,type:'text',rptId:b.id};}):[]};
+  document.getElementById('ed-name').textContent=f?f.title:rname;
+  document.getElementById('ed-job').textContent=curGender;
+  buildSb(f);renderPrev();showScreen('editor');
+}
+
+function startTemplate(k){
+  isFree=true;curReport=null;extraPages=0;moveMode=false;saveId=null;
+  var tpl=TPL[k]||TPL.empty;
+  PB={1:tpl.blocks.map(function(b,i){return{id:Date.now()+i,title:b.title,content:b.content||'',cols:b.cols,type:'text'};})};
+  document.getElementById('ed-name').textContent=tpl.name;
+  document.getElementById('ed-job').textContent=curGender||'';
+  buildFreeSb();renderPrev();showScreen('editor');
+}
+
+function sec(t,inner){return '<div class="f-sec"><div class="f-sec-title">'+t+'</div>'+inner+'</div>';}
+function fg(id,lbl,ph){return '<div class="f-grp"><label class="f-lbl">'+lbl+'</label><input class="f-inp" id="'+id+'" placeholder="'+ph+'" oninput="lu()"></div>';}
+function fv(id){var e=document.getElementById(id);return e?e.value:'';}
+function fp(id){var e=document.getElementById(id);return e?(e.value||e.placeholder||''):'';}
+
+function hdrSec(){
+  var st=Object.keys(HS).map(function(k){var v=HS[k];return '<div class="hs-opt'+(rStyle===k?' active':'')+'" onclick="setHS(\''+k+'\')"><div class="hs-preview" style="background:'+v.bg+'"></div><div class="hs-label">'+v.label+'</div></div>';}).join('');
+  var sz=Object.keys(SZ).map(function(k){return '<button class="hs-size-btn'+(rHdrSz===k?' active':'')+'" onclick="setSZ(\''+k+'\')">'+SZ[k].label+'</button>';}).join('');
+  return sec('تصميم الهيدر','<label class="f-lbl">نمط الهيدر</label><div class="hdr-styles">'+st+'</div><label class="f-lbl" style="margin-top:8px">حجم الهيدر</label><div class="hdr-size-row">'+sz+'</div>');
+}
+
+function fontSec(){
+  var fn=[['Tajawal','تجوال'],['Cairo','Cairo'],['Noto Kufi Arabic','Kufi'],['Amiri','أميري']];
+  var fsz=[['xs','XS'],['sm','S'],['md','M'],['lg','L'],['xl','XL']];
+  return sec('الخط وحجمه','<label class="f-lbl">نوع الخط</label><div class="fnt-btns">'+fn.map(function(x){return '<button class="fnt-btn'+(rFont===x[0]?' active':'')+'" onclick="setFont(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div><label class="f-lbl" style="margin-top:8px">حجم الخط</label><div class="sz-btns">'+fsz.map(function(x){return '<button class="sz-btn'+(rFontSz===x[0]?' active':'')+'" onclick="setFSz(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div>');
+}
+
+function sigSec(){
+  return sec('التوقيعات','<div class="f-grp"><label class="f-lbl">التوقيع الأيمن</label><div class="ig-row"><button class="ig-btn active" onclick="igC(this,\'f_sig1\',\'المعلم\')">المعلم</button><button class="ig-btn" onclick="igC(this,\'f_sig1\',\'المعلمة\')">المعلمة</button></div><input class="f-inp" id="f_sig1" placeholder="/ اسم المعلم" oninput="lu()"><div class="sig-canvas-wrap"><canvas id="sc1" width="280" height="60"></canvas><button class="sig-clear-btn" onclick="clrSig(1)">مسح</button></div></div><div class="f-grp"><label class="f-lbl">التوقيع الأيسر</label><div class="ig-row"><button class="ig-btn active" onclick="igC(this,\'f_sig2\',\'مدير المدرسة\')">مدير المدرسة</button><button class="ig-btn" onclick="igC(this,\'f_sig2\',\'مديرة المدرسة\')">مديرة المدرسة</button></div><input class="f-inp" id="f_sig2" placeholder="/ اسم المدير" oninput="lu()"><div class="sig-canvas-wrap"><canvas id="sc2" width="280" height="60"></canvas><button class="sig-clear-btn" onclick="clrSig(2)">مسح</button></div></div>');
+}
+
+function buildSb(f){
+  var sb=document.getElementById('sb-fields');
+  var h=sec('معلومات الجهة',fg('f_admin','الإدارة التعليمية','الإدارة العامة للتعليم')+fg('f_region','المنطقة','بالمنطقة الشرقية')+fg('f_school','اسم المدرسة','مدرسة النور'));
+  h+=sec('المعلومات الإضافية',fg('f_year','العام الدراسي','العام الدراسي ١٤٤٧هـ')+fg('f_semester','الفصل الدراسي','الفصل الدراسي الثاني'));
+  h+=sec('عنوان التقرير','<div class="f-grp"><input class="f-inp" id="f_title" placeholder="'+(f?f.title:'عنوان التقرير')+'" oninput="lu()"></div>');
+  if(f&&f.basic&&f.basic.length)h+=sec('المعلومات الأساسية',f.basic.map(function(x){return fg('f_'+x.id,x.lbl,x.ph);}).join(''));
+  if(f&&f.second&&f.second.length)h+=sec('معلومات إضافية',f.second.map(function(x){return fg('f_'+x.id,x.lbl,x.ph);}).join(''));
+  h+=hdrSec();h+=fontSec();h+=sigSec();
+  sb.innerHTML=h;initSig();
+}
+
+function buildFreeSb(){
+  var sb=document.getElementById('sb-fields');
+  var h=sec('معلومات الجهة',fg('f_admin','الإدارة التعليمية','الإدارة العامة للتعليم')+fg('f_region','المنطقة','بالمنطقة الشرقية')+fg('f_school','اسم المدرسة','مدرسة النور')+fg('f_year','العام الدراسي','العام الدراسي ١٤٤٧هـ')+fg('f_semester','الفصل الدراسي','الفصل الدراسي الثاني'));
+  h+=sec('عنوان التقرير','<div class="f-grp"><input class="f-inp" id="f_title" placeholder="اكتب عنوان التقرير..." oninput="lu()"></div>');
+  h+=hdrSec();h+=fontSec();h+=sigSec();
+  sb.innerHTML=h;initSig();
+}
+
+function igC(btn,fid,lbl){btn.parentElement.querySelectorAll('.ig-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');document.getElementById(fid).placeholder='/ '+lbl;lu();}
+function setHS(s){rStyle=s;document.querySelectorAll('.hs-opt').forEach(function(x){x.classList.toggle('active',x.getAttribute('onclick').indexOf("'"+s+"'")>-1);});lu();}
+function setSZ(s){rHdrSz=s;document.querySelectorAll('.hs-size-btn').forEach(function(x){x.classList.toggle('active',x.getAttribute('onclick').indexOf("'"+s+"'")>-1);});lu();}
+function setFont(f){rFont=f;document.querySelectorAll('.fnt-btn').forEach(function(x){x.classList.toggle('active',x.getAttribute('onclick').indexOf("'"+f+"'")>-1);});lu();}
+function setFSz(s){rFontSz=s;document.querySelectorAll('.sz-btn').forEach(function(x){x.classList.toggle('active',x.getAttribute('onclick').indexOf("'"+s+"'")>-1);});lu();}
+
+function initSig(){
+  [['sc1',1],['sc2',2]].forEach(function(p){
+    var cv=document.getElementById(p[0]);if(!cv)return;
+    var ctx=cv.getContext('2d');ctx.strokeStyle='#15445A';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';
+    var dr=false,lx=0,ly=0;
+    function pos(e){var r=cv.getBoundingClientRect();if(e.touches)return{x:(e.touches[0].clientX-r.left)*(cv.width/r.width),y:(e.touches[0].clientY-r.top)*(cv.height/r.height)};return{x:(e.clientX-r.left)*(cv.width/r.width),y:(e.clientY-r.top)*(cv.height/r.height)};}
+    cv.onmousedown=function(e){dr=true;var q=pos(e);lx=q.x;ly=q.y;};
+    cv.onmousemove=function(e){if(!dr)return;var q=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(q.x,q.y);ctx.stroke();lx=q.x;ly=q.y;if(p[1]===1)s1Data=cv.toDataURL();else s2Data=cv.toDataURL();};
+    cv.onmouseup=cv.onmouseleave=function(){dr=false;};
+    cv.ontouchstart=function(e){e.preventDefault();dr=true;var q=pos(e);lx=q.x;ly=q.y;};
+    cv.ontouchmove=function(e){e.preventDefault();if(!dr)return;var q=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(q.x,q.y);ctx.stroke();lx=q.x;ly=q.y;if(p[1]===1)s1Data=cv.toDataURL();else s2Data=cv.toDataURL();};
+    cv.ontouchend=function(){dr=false;};
+  });
+}
+function clrSig(n){var c=document.getElementById('sc'+n);if(c)c.getContext('2d').clearRect(0,0,c.width,c.height);if(n===1)s1Data=null;else s2Data=null;}
+
+function openAddEl(){
+  elType='text';elWidth='half';elImgSrc=null;
+  document.getElementById('new-el-title').value='';document.getElementById('new-el-content').value='';
+  document.getElementById('el-img-prev').style.display='none';
+  document.getElementById('el-text-f').style.display='block';document.getElementById('el-img-f').style.display='none';
+  document.getElementById('el-t-text').classList.add('active');document.getElementById('el-t-img').classList.remove('active');
+  document.getElementById('elw-half').classList.add('active');document.getElementById('elw-full').classList.remove('active');
+  openModal('modal-add-el');
+}
+function selElType(t){elType=t;document.getElementById('el-t-text').classList.toggle('active',t==='text');document.getElementById('el-t-img').classList.toggle('active',t==='img');document.getElementById('el-text-f').style.display=t==='text'?'block':'none';document.getElementById('el-img-f').style.display=t==='img'?'block':'none';}
+function selElW(w){elWidth=w;document.getElementById('elw-half').classList.toggle('active',w==='half');document.getElementById('elw-full').classList.toggle('active',w==='full');}
+function previewElImg(inp){if(!inp.files[0])return;var r=new FileReader();r.onload=function(e){elImgSrc=e.target.result;document.getElementById('el-img-prev-img').src=elImgSrc;document.getElementById('el-img-prev').style.display='block';};r.readAsDataURL(inp.files[0]);}
+function confirmAddEl(){
+  if(!PB[1])PB[1]=[];
+  if(elType==='text'){PB[1].push({id:Date.now(),title:document.getElementById('new-el-title').value.trim()||'قسم جديد',content:document.getElementById('new-el-content').value,cols:elWidth==='full'?2:1,type:'text'});}
+  else if(elType==='img'&&elImgSrc){PB[1].push({id:Date.now(),title:'صورة',content:'',cols:1,type:'img',imgSrc:elImgSrc});}
+  closeModal('modal-add-el');lu();
+}
+
+function renderPrev(){
+  var area=document.getElementById('preview-area');area.innerHTML='';
+  var tb=document.createElement('div');tb.className='pg-toolbar';
+  tb.innerHTML='<div class="pg-tb-inner"><button class="pt-btn'+(moveMode?' active':'')+'" onclick="toggleMove()">'+(moveMode?'✅':'✋')+' تحريك العناصر</button><button class="pt-add" onclick="openAddEl()">➕ إضافة عنصر</button></div>';
+  area.appendChild(tb);
+  for(var p=1;p<=1+extraPages;p++)area.appendChild(buildPage(p));
+}
+
+function buildPage(num){
+  var h=HS[rStyle]||HS.white,sz=SZ[rHdrSz]||SZ.md,fs=FS[rFontSz]||FS.md,f=RPT[curReport];
+  var admin=fv('f_admin')||'الإدارة العامة للتعليم',region=fv('f_region')||'',school=fv('f_school')||'مدرسة';
+  var year=fv('f_year')||'العام الدراسي ١٤٤٧هـ',sem=fv('f_semester')||'الفصل الدراسي الثاني';
+  var title=fv('f_title')||(f?f.title:(isFree?'تقرير':'التقرير'));
+  var s1l=(document.querySelector('#sb-fields .ig-btn[onclick*="f_sig1"].active')||{textContent:'المعلم'}).textContent;
+  var s2l=(document.querySelector('#sb-fields .ig-btn[onclick*="f_sig2"].active')||{textContent:'مدير المدرسة'}).textContent;
+  var sig1=fv('f_sig1')||'/ اسم المعلم',sig2=fv('f_sig2')||'/ اسم المدير';
+
+  var page=document.createElement('div');page.className='a4-page';
+  page.style.fontFamily="'"+rFont+"',sans-serif";page.style.fontSize=fs;
+  page.innerHTML=
+    '<div class="top-band" style="background:'+h.band+'"></div>'+
+    '<div class="pg-hdr" style="background:'+h.bg+';padding:'+sz.pad+'">'+
+      '<div class="ph-r"><p style="color:'+h.tc+';font-size:10.5px">المملكة العربية السعودية<br>وزارة التعليم<br>'+admin+(region?'<br>'+region:'')+'<br>'+school+'</p></div>'+
+      '<div class="ph-c"><img src="'+h.logo()+'" style="height:'+sz.lh+'" alt="وزارة التعليم"></div>'+
+      '<div class="ph-l"><p style="color:'+h.tc+';font-size:10.5px">'+year+'<br>'+sem+'</p></div>'+
+    '</div>'+
+    (num===1?'<div class="rpt-title-box">'+title+'</div>':'<div style="margin:7px 28px;text-align:center;font-size:11px;color:#999;font-weight:600">'+title+' — صفحة '+num+'</div>')+
+    (num===1&&f&&f.basic&&f.basic.length?'<div class="info-row c3">'+f.basic.map(function(x){return '<div class="info-cell"><div class="ic-lbl">'+x.lbl+'</div><div class="ic-val">'+fp('f_'+x.id)+'</div></div>';}).join('')+'</div>':'')+
+    (num===1&&f&&f.second&&f.second.length?'<div class="info-row c3">'+f.second.map(function(x){return '<div class="info-cell"><div class="ic-lbl">'+x.lbl+'</div><div class="ic-val">'+fp('f_'+x.id)+'</div></div>';}).join('')+'</div>':'');
+
+  var content=document.createElement('div');content.className='page-content';page.appendChild(content);
+  var blocks=PB[num]||[];var i=0;
+  while(i<blocks.length){
+    var b=blocks[i];
+    if(b.cols===2||i+1>=blocks.length){content.appendChild(mkRow([b],num,i,fs));i++;}
+    else{content.appendChild(mkRow([b,blocks[i+1]],num,i,fs));i+=2;}
+  }
+  var addRow=document.createElement('div');addRow.className='add-el-row no-print';
+  var addBtn=document.createElement('button');addBtn.className='add-el-btn';addBtn.textContent='➕ إضافة عنصر جديد';addBtn.onclick=openAddEl;
+  addRow.appendChild(addBtn);content.appendChild(addRow);
+
+  var foot=document.createElement('div');foot.className='page-footer';
+  foot.innerHTML='<div class="footer-sig">'+(s1Data?'<img src="'+s1Data+'" style="height:28px;display:block;margin:0 auto 2px">':'')+s1l+'<div class="sig-line"></div>'+sig1+'</div><div class="footer-sig">'+(s2Data?'<img src="'+s2Data+'" style="height:28px;display:block;margin:0 auto 2px">':'')+s2l+'<div class="sig-line"></div>'+sig2+'</div>';
+  page.appendChild(foot);
+  var bot=document.createElement('div');bot.className='bot-band';bot.style.background=h.band;page.appendChild(bot);
+  if(moveMode)enableDrag(page,num);
+  return page;
+}
+
+function mkRow(blocks,pnum,si,fs){
+  var row=document.createElement('div');row.className='c-row '+(blocks.length===2?'col2':'col1');
+  blocks.forEach(function(b,ri){
+    var el=document.createElement('div');el.className='c-block';
+    if(moveMode)el.setAttribute('draggable','true');
+    if(b.type==='img'){var img=document.createElement('img');img.className='block-img';img.src=b.imgSrc||'';img.style.height='160px';el.appendChild(img);}
+    else{var bv=(b.rptId?fv('f_'+b.rptId):(b.content||'')).replace(/\n/g,'<br>');el.innerHTML='<div class="cb-head">◆ '+(b.title||'')+'</div><div class="cb-body" contenteditable="true" spellcheck="false" style="font-size:'+fs+'">'+bv+'</div>';}
+    var rh=document.createElement('div');rh.className='resize-h';
+    var sy=0,sh=0,rs=false;
+    rh.onmousedown=function(e){rs=true;sy=e.clientY;sh=el.offsetHeight;e.preventDefault();e.stopPropagation();};
+    document.addEventListener('mousemove',function(e){if(!rs)return;el.style.height=Math.max(50,sh+(e.clientY-sy))+'px';});
+    document.addEventListener('mouseup',function(){rs=false;});
+    el.appendChild(rh);row.appendChild(el);
+  });
+  return row;
+}
+
+function toggleMove(){moveMode=!moveMode;renderPrev();}
+
+function enableDrag(page,pnum){
+  var els=page.querySelectorAll('.c-block'),src=null;
+  els.forEach(function(el){
+    el.ondragstart=function(e){src=el;setTimeout(function(){el.classList.add('dragging');},0);e.dataTransfer.effectAllowed='move';};
+    el.ondragend=function(){el.classList.remove('dragging');page.querySelectorAll('.drag-top,.drag-bot').forEach(function(x){x.classList.remove('drag-top','drag-bot');});src=null;};
+    el.ondragover=function(e){e.preventDefault();if(!src||src===el)return;page.querySelectorAll('.drag-top,.drag-bot').forEach(function(x){x.classList.remove('drag-top','drag-bot');});var r=el.getBoundingClientRect();el.classList.add(e.clientY<r.top+r.height/2?'drag-top':'drag-bot');};
+    el.ondragleave=function(){el.classList.remove('drag-top','drag-bot');};
+    el.ondrop=function(e){
+      e.preventDefault();if(!src||src===el)return;el.classList.remove('drag-top','drag-bot');
+      var all=[].slice.call(page.querySelectorAll('.c-block'));
+      var si=all.indexOf(src),ti=all.indexOf(el);
+      if(si<0||ti<0||si===ti)return;
+      var pb=PB[pnum];if(!pb)return;
+      var tmp=pb[si];pb[si]=pb[ti];pb[ti]=tmp;lu();
+    };
+  });
+}
+
+function addPage(){extraPages++;if(!PB[1+extraPages])PB[1+extraPages]=[];renderPrev();}
+
+var _t=null;
+function lu(){clearTimeout(_t);_t=setTimeout(renderPrev,260);}
+
+async function downloadPDF(){
+  showOv('جاري تحضير PDF...','يرجى الانتظار');
+  document.querySelectorAll('.no-print').forEach(function(el){el.style.display='none';});
+  await new Promise(function(r){setTimeout(r,400);});
+  try{
+    var jsPDF=window.jspdf.jsPDF;
+    var pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var pages=document.querySelectorAll('.a4-page');
+    for(var i=0;i<pages.length;i++){
+      if(i>0)pdf.addPage();
+      document.getElementById('ov-text').textContent='معالجة صفحة '+(i+1)+' من '+pages.length+'...';
+      var canvas=await html2canvas(pages[i],{scale:2,useCORS:true,allowTaint:true,logging:false});
+      pdf.addImage(canvas.toDataURL('image/jpeg',.92),'JPEG',0,0,210,297);
+    }
+    pdf.save((fv('f_title')||'تقرير')+'.pdf');
+  }catch(e){
+    document.getElementById('ov-title').textContent='حدث خطأ';
+    document.getElementById('ov-text').textContent=e.message;
+    document.getElementById('ov-close').style.display='inline-block';
+    document.getElementById('ov-spin').style.display='none';
+    return;
+  }finally{document.querySelectorAll('.no-print').forEach(function(el){el.style.display='';});}
+  closeOv();
+}
+
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+function showOv(t,tx){document.getElementById('ov-title').textContent=t;document.getElementById('ov-text').textContent=tx;document.getElementById('ov-close').style.display='none';document.getElementById('ov-spin').style.display='block';document.getElementById('overlay').classList.add('active');}
+function closeOv(){document.getElementById('overlay').classList.remove('active');}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
+
+loadSaved();
+</script>
+</body>
+</html>
